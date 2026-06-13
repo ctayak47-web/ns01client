@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -21,15 +23,11 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-disabled: true # Отключаем кэш, пока сервера Гитхаба штормит
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
 
       - name: Build Mod with Gradle
-        run: ./gradlew build
-
-      - name: Upload Finished JAR Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: NS01-Client-Jar
-          path: build/libs/*.jar
+        run: ./gradlew build --no-daemon
