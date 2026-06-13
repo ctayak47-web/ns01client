@@ -21,10 +21,11 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Setup Gradle
+      - name: Setup Specific Gradle 8.10
         uses: gradle/actions/setup-gradle@v3
         with:
+          gradle-version: '8.10' # Принудительно ставим стабильную 8-ю версию
           cache-disabled: true
 
-      - name: Build Mod with Global Gradle
+      - name: Build Mod with Gradle 8
         run: gradle build --no-daemon
