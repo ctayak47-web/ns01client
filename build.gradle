@@ -1,0 +1,70 @@
+plugins {
+    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'java'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+// Все настройки компиляции объединены в один блок для стабильности в Termux
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.fork = true // Фикс ошибки SystemInfo на Android
+    it.options.encoding = "UTF-8"
+}
+
+// Корректная обработка ресурсов в UTF-8
+tasks.withType(ProcessResources).configureEach {
+    it.filesMatching('fabric.mod.json') {
+        it.filter(io.github.fabricmc.loom.util.properties.PropertyFilter.create(project.properties))
+    }
+}
+
+dependencies {
+    // Основные рабочие зависимости под 1.21.4
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:1.21.4+build.2:v2"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:0.113.0+1.21.4"
+
+    // Подключаем сам Fabric Loader в компиляцию, чтобы Java видела импорты net.fabricmc.api и Mixin
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    annotationProcessor "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+
+loom {
+    runs {
+        client {
+            // Настройки для тестов при необходимости
+        }
+        server {
+            // Настройки для сервера при необходимости
+        }
+    }
+}
+
+tasks.jar {
+    from("LICENSE") {
+        rename { "${it}_${base.archivesName.get()}" }
+    }
+    archiveFileName = "${base.archivesName.get()}-${version}.jar"
+}
+
+// Настройка javadoc, чтобы не ругался на миксины
+tasks.withType(Javadoc).configureEach {
+    options.encoding = 'UTF-8'
+    options.locale = 'en_US'
+    options.addBooleanOption('html5', true)
+    options.addStringOption('Xdoclint:none', '-Xdoclint:none')
+    options.addStringOption('failOnUnresolvedRef', 'false')
+    options.addStringOption('-quiet', 'true')
+}
